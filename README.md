@@ -1,5 +1,7 @@
 ## Project Overview
 
+[Čestina](./README-czech.md)
+
 This project is a modern PHP 8.3 web application built on the Nette Framework. The application acts as a social platform that allows users to publish posts, manage accounts, interact through comments and reactions, communicate via internal messaging, and purchase premium memberships.
 
 The solution integrates both MariaDB/MySQL for relational data storage and Elasticsearch for advanced full-text search capabilities.
