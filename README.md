@@ -1,3 +1,7 @@
+# Social Network Platform (Nette Framework)
+
+---
+
 ## Project Overview
 
 [Čestina](./README-czech.md)
