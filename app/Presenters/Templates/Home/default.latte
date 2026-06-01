@@ -1,0 +1,159 @@
+{block content}
+    <div class="container">
+
+        {control searchForm}
+
+
+        {if $isSearch}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="margin: 0;">Výsledky pro: <span style="color: #3b82f6;">"{$searchQuery}"</span></h1>
+                <a n:href="Home:default" style="color: #64748b; text-decoration: none; font-weight: 500;">&larr; Zrušit hledání</a>
+            </div>
+
+            {if empty($posts)}
+                <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                    <i class="fa-solid fa-face-frown" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                    <p>Bohužel jsme nenašli žádné články s tímto titulkem.</p>
+                </div>
+            {else}
+                <div class="posts-grid">
+                    {foreach $posts as $esPost}
+                        {* Data z Elasticsearch jsou v poli _source a ID je v _id *}
+                        {var $source = $esPost['_source']}
+
+                        <div class="post-card">
+                            <div class="card-image-wrapper">
+                                {if isset($source['image']) && !empty($source['image'])}
+                                    <img src="{$basePath}/assets/img/{$source['image']}" alt="{$source['title']}">
+                                {else}
+                                    <div class="card-image-placeholder"><i class="fa-regular fa-image"></i></div>
+                                {/if}
+                            </div>
+                            <div class="card-content">
+                                <h2 class="card-title">
+                                    <a n:href="Post:show $esPost['_id']">{$source['title']}</a>
+                                </h2>
+                                <p class="card-description">
+                                    {var $cleanContent = ($source['content']|stripHtml)}
+                                    {$cleanContent|truncate:60}{if iconv_strlen($cleanContent) > 60}...{/if}
+                                </p>
+                                <div class="card-link-wrapper">
+                                    <a n:href="Post:show $esPost['_id']" class="card-btn">Číst více →</a>
+                                </div>
+                            </div>
+                        </div>
+                    {/foreach}
+                </div>
+            {/if}
+
+        {else}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="margin: 0;">Nejnovější články</h1>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label style="color: #64748b; font-weight: 500; font-size: 0.9rem;">Počet příspěvků na stránku:</label>
+                    <select onchange="ajaxChangeLimit(this)" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer; outline: none; background-color: white;">
+                        <option value="{link changeOffset! offset => 9}" {if $currentOffset == 9}selected{/if}>9</option>
+                        <option value="{link changeOffset! offset => 18}" {if $currentOffset == 18}selected{/if}>18</option>
+                        <option value="{link changeOffset! offset => 27}" {if $currentOffset == 27}selected{/if}>27</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="snippet--postsList">
+                {snippet postsList}
+                    <div class="posts-grid">
+                        {foreach $posts as $post}
+                            <div class="post-card">
+                                <div class="card-image-wrapper">
+                                    {if !empty($post->image)}
+                                        <img src="{$basePath}/assets/img/{$post->image}" alt="{$post->title}">
+                                    {else}
+                                        <div class="card-image-placeholder"><i class="fa-regular fa-image"></i></div>
+                                    {/if}
+                                {if $post->is_premium}
+                                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(255, 255, 255, 0.9); padding: 5px 8px; border-radius: 50%; color: #f59e0b; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                            <i class="fa-solid fa-crown"></i>
+                                        </div>
+                                    {/if}
+                                </div>
+                                <div class="card-content">
+                                    <h2 class="card-title">
+                                        <a n:href="Post:show $post->id">{$post->title}</a>
+                                    </h2>
+                                    <p class="card-description">
+                                        {var $cleanContent = ($post->content|stripHtml)}
+                            {$cleanContent|truncate:60}{if iconv_strlen($cleanContent) > 60}...{/if}
+                                    </p>
+                                    <div class="card-link-wrapper">
+                                        <a n:href="Post:show $post->id" class="card-btn">Číst více →</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {/foreach}
+                    </div>
+
+                    {if $paginator->getPageCount() > 1}
+                        <div class="pagination">
+
+                            {if !$paginator->isFirst()}
+                                <a n:href="this, page => $paginator->getPage() - 1" class="page-link">&laquo; Předchozí</a>
+                            {else}
+                                <span class="page-link disabled">&laquo; Předchozí</span>
+                            {/if}
+
+                        {for $i = 1; $i <= $paginator->getPageCount(); $i++}
+                                {if $i == $paginator->getPage()}
+                                    <span class="page-link active">{$i}</span>
+                                {else}
+                                    <a n:href="this, page => $i" class="page-link">{$i}</a>
+                                {/if}
+                            {/for}
+
+                        {if !$paginator->isLast()}
+                                <a n:href="this, page => $paginator->getPage() + 1" class="page-link">Další &raquo;</a>
+                            {else}
+                                <span class="page-link disabled">Další &raquo;</span>
+                            {/if}
+
+                        </div>
+                    {/if}
+                {/snippet}
+            </div>
+
+        {/if} {* Konec podmínky $isSearch *}
+    </div>
+
+    <script>
+        function ajaxChangeLimit(selectElement) {
+            const url = selectElement.value;
+            const snippetContainer = document.getElementById('snippet--postsList');
+
+            if (snippetContainer) {
+                snippetContainer.style.opacity = '0.5';
+                snippetContainer.style.transition = 'opacity 0.2s';
+            }
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(payload => {
+                    if (payload.snippets && payload.snippets['snippet--postsList']) {
+                        snippetContainer.innerHTML = payload.snippets['snippet--postsList'];
+                        snippetContainer.style.opacity = '1';
+
+                        window.history.pushState({}, '', window.location.pathname);
+                    }
+                })
+                .catch(error => {
+                    console.error('AJAX Error:', error);
+                    window.location.href = url;
+                });
+        }
+    </script>
+{/block}

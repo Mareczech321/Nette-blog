@@ -1,0 +1,159 @@
+{var $isPremium = false}
+{if $user->isLoggedIn() && $user->getIdentity()->premium_duration}
+    {if new \DateTime($user->getIdentity()->premium_duration) > new \DateTime()}
+        {var $isPremium = true}
+    {/if}
+{/if}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{ifset title}{include title|stripHtml} | {/ifset}Nette Blog</title>
+
+    <link rel="stylesheet" href="{$basePath}/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <div n:foreach="$flashes as $flash" n:class="flash, $flash->type">
+        {$flash->message}
+    </div>
+
+    <header style="margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+
+        <a n:href="Home:" style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); text-decoration: none;">Nette Blog</a>
+
+        <ul class="navig">
+            {if $user->isLoggedIn()}
+                <li>
+                    <a n:href="Chat:default" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: inherit;">
+                        <i class="fa-solid fa-envelope"></i> Zprávy
+
+                        {snippet unreadBadgeSnippet}
+                            {ifset $unreadMessagesCount}
+                                {if $unreadMessagesCount > 0}
+                                    <span style="background: #ef4444; color: white; border-radius: 12px; padding: 2px 7px; font-size: 0.75rem; font-weight: 700; line-height: 1;">
+                                        {$unreadMessagesCount}
+                                    </span>
+                                {/if}
+                            {/ifset}
+                        {/snippet}
+                    </a>
+                </li>
+            {/if}
+
+            <li><a n:href="Home:">Články</a></li>
+
+            {if $user->isLoggedIn()}
+                <li><a n:href="Edit:create" style="color: var(--primary); font-weight: 500;">+ Napsat článek</a></li>
+
+                <li class="user-dropdown">
+                    <span class="dropdown-toggle">
+                        {if $isPremium}
+                            <i class="fa-solid fa-crown" style="color: #f59e0b; margin-right: 5px;" title="Premium člen"></i>
+                        {/if}
+                        <strong>{$user->getIdentity()->getData()['name']}</strong>
+                        <span class="user-role">({$user->getRoles()[0]})</span>
+                        <i class="fa-solid fa-chevron-down icon-arrow"></i>
+                    </span>
+
+                    <ul class="dropdown-menu">
+                        {if $user->isInRole('admin')}
+                            <li>
+                                <a n:href="Admin:"><i class="fa-solid fa-gauge" style="width: 20px;"></i> Admin panel</a>
+                            </li>
+                        {/if}
+
+                        <li>
+                                <a n:href="User:profile name => $user->getIdentity()->getData()['name']" style="text-decoration: none; color: inherit;">
+                                    <i class="fa-solid fa-user" style="width: 20px;"></i> Správa účtu
+                                </a>
+                        </li>
+
+                        <li style="border-top: 1px solid var(--border); margin-top: 5px; padding-top: 5px;">
+                                <a n:href="Premium:history" style="text-decoration: none; color: inherit;">
+                                    <i class="fa-solid fa-receipt" style="width: 20px;"></i> Moje objednávky
+                                </a>
+                        </li>
+
+                        {if $isPremium}
+                            <li style="padding: 8px 15px; font-size: 0.85rem; color: #10b981; background: #f0fdf4;">
+                                <i class="fa-solid fa-check-circle" style="width: 20px;"></i> Premium aktivní
+                            </li>
+                        {else}
+                            <li>
+                                <a n:href="Premium:cart" style="text-decoration: none; color: #f59e0b;">
+                                    <i class="fa-solid fa-star" style="width: 20px;"></i> Získat Premium
+                                </a>
+                            </li>
+                        {/if}
+
+                        {if isset($activeAccounts) && count($activeAccounts) > 1}
+                            <li style="border-top: 1px solid var(--border); margin-top: 5px; padding-top: 5px;">
+                                <a href="#"
+                                   onclick="
+                                           /* 1. Zobrazí / skryje další účty */
+                                           document.getElementById('hidden-accounts').style.display = document.getElementById('hidden-accounts').style.display === 'none' ? 'block' : 'none';
+                                           /* 2. Otočí šipku (přidá/odebere třídu 'rotated') */
+                                           this.querySelector('.arrow-icon').classList.toggle('rotated');
+                                           return false;"
+                                   style="text-decoration: none; color: var(--primary); font-size: 0.85rem; text-align: center; display: block; font-weight: bold;">
+                                    Zobrazit další účty <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                                </a>
+                            </li>
+
+                            <div id="hidden-accounts" style="display: none; background: #f8fafc; border-radius: 6px; margin: 5px 10px; padding: 5px 0;">
+                                {foreach $activeAccounts as $accountId => $identity}
+                                    {if $accountId !== $user->getId()}
+                                        <li style="display: flex; justify-content: space-between; align-items: center; padding: 5px 15px;">
+                                            <a n:href="switchAccount! $accountId" style="text-decoration: none; color: inherit; padding: 0; flex-grow: 1; font-size: 0.9rem;">
+                                                <i class="fa-solid fa-circle-user" style="color: #64748b; margin-right: 5px;"></i>
+                                                {if $isPremium}
+                                                    <i class="fa-solid fa-crown" style="color: #f59e0b; margin-right: 5px;" title="Premium člen"></i>
+                                                {/if}
+                                                {$identity->getData()['name'] ?? 'Neznámý'}
+                                            </a>
+                                            <a n:href="removeAccount! $accountId" style="color: #ef4444; padding: 0 5px; background: none;" title="Odebrat účet ze seznamu">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                        </li>
+                                    {/if}
+                                {/foreach}
+                            </div>
+
+                            <li style="border-top: 1px solid var(--border); margin-top: 5px; padding-top: 5px;">
+                                <a n:href="logoutAll!" class="logout-link" style="color: #ef4444;"><i class="fa-solid fa-power-off" style="width: 20px;"></i> Odhlásit ze všech</a>
+                            </li>
+                        {/if}
+
+                        <li style="border-top: 1px solid var(--border); margin-top: 5px; padding-top: 5px;">
+                            <a n:href="Sign:in" style="text-decoration: none; color: inherit;">
+                                <i class="fa-solid fa-user-plus" style="width: 20px;"></i> Přidat další účet
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li style="margin-left: 10px;">
+                    <a n:href="removeAccount! $user->getId()" title="Odhlásit se" style="color: var(--text-muted); font-size: 1.3rem; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-muted)'">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
+                </li>
+
+            {else}
+                <li><a n:href="Sign:in" class="signBtn">Přihlásit</a></li>
+            {/if}
+        </ul>
+
+    </header>
+
+    {include content}
+    {block comments}{/block}
+</div>
+</body>
+</html>

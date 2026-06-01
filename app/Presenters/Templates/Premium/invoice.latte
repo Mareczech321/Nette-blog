@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8">
+    <title>Objednávka č. {$order->order_number}</title>
+    <style>
+        /* KLÍČOVÉ: mPDF vyžaduje DejaVu Sans pro správné zobrazení české diakritiky */
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 10pt;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table {
+            margin-bottom: 30px;
+        }
+
+        .header-table td {
+            vertical-align: top;
+        }
+
+        .company-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #3b82f6; /* Tvoje primární modrá */
+            margin-bottom: 5px;
+        }
+
+        .document-title {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #0f172a;
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #64748b;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* Tabulka položek */
+        .items-table {
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: bold;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .items-table th.right,
+        .items-table td.right {
+            text-align: right;
+        }
+
+        .items-table th.center,
+        .items-table td.center {
+            text-align: center;
+        }
+
+        .total-row td {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #0f172a;
+            border-top: 2px solid #334155;
+            padding-top: 15px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+            font-size: 8pt;
+            color: #94a3b8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<table class="header-table">
+    <tr>
+        <td style="width: 50%;">
+            <div class="company-name">Nette Blog Premium</div>
+            <div>Provozovatel s.r.o.</div>
+            <div>Ulice a číslo popisné 123</div>
+            <div>100 00 Praha 1</div>
+            <div>IČO: 12345678</div>
+            <div>DIČ: CZ12345678</div>
+        </td>
+        <td style="width: 50%; text-align: right;">
+            <div class="document-title">Potvrzení objednávky</div>
+            <div><strong>Číslo objednávky:</strong> {$order->order_number}</div>
+            <div>
+                <strong>Vystaveno:</strong>
+                {if $order->created_at}
+                    {$order->created_at|date:'j. n. Y'}
+                {else}
+                    {date('j. n. Y')}
+                {/if}
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table style="margin-bottom: 30px;">
+    <tr>
+        <td style="width: 50%;">
+            <div class="section-title">Odběratel</div>
+            <strong>ID uživatele:</strong> #{$order->user_id}<br>
+        </td>
+    </tr>
+</table>
+
+<table class="items-table">
+    <thead>
+    <tr>
+        <th>Položka</th>
+        <th class="center" style="width: 15%;">Délka</th>
+        <th class="right" style="width: 25%;">Cena celkem</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            <strong>{$order->item}</strong><br>
+            <span style="color: #64748b; font-size: 9pt;">Aktivace VIP výhod na platformě Nette Blog</span>
+        </td>
+        <td class="center">
+            {$order->duration_months} {if $order->duration_months == 1}měsíc{elseif $order->duration_months >= 2 && $order->duration_months <= 4}měsíce{else}měsíců{/if}
+        </td>
+        <td class="right">{$order->price|number:2, ',', ' '} Kč</td>
+    </tr>
+
+    <tr class="total-row">
+        <td colspan="2" class="right">K úhradě celkem:</td>
+        <td class="right">{$order->price|number:2, ',', ' '} Kč</td>
+    </tr>
+    </tbody>
+</table>
+
+<div style="margin-top: 50px; color: #475569;">
+    <p>Děkujeme za vaši objednávku a podporu našeho projektu.</p>
+    <p>Nejsme plátci DPH.</p>
+</div>
+
+</body>
+</html>

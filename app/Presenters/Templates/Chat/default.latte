@@ -1,0 +1,115 @@
+{block content}
+    <div class="chat-container">
+
+        <div class="chat-header">
+            <h2><i class="fa-solid fa-inbox"></i> Moje zprávy</h2>
+        </div>
+
+        <div id="chat-config"
+             data-search-url="{link Chat:searchUsers}"
+             data-detail-url="{link Chat:detail id => '999999'}"
+             style="display: none;"></div>
+
+        <div style="padding: 20px; background: white; border-radius: 0 0 12px 12px; flex: 1;">
+
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
+                <h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #475569;">Začít novou konverzaci</h3>
+                <div style="display: flex; gap: 8px; align-items: stretch;">
+                    <input type="text"
+                           id="userSearch"
+                           placeholder="Vyhledat uživatele..."
+                           style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; transition: all 0.2s;"
+                           onkeyup="searchUsers(this.value)"
+                           onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                           onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'">
+                </div>
+                <div id="searchResults" style="margin-top: 10px; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            {if empty($conversations)}
+                <div style="text-align: center; color: #64748b; padding: 40px 0;">
+                    <i class="fa-regular fa-comments" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+                    <p>Zatím nemáte žádné konverzace.</p>
+                    <p style="font-size: 0.9rem;">Začněte psát někomu z jeho profilu nebo články!</p>
+                </div>
+            {else}
+                <h3 style="margin: 0 0 12px 0; font-size: 1rem; color: #475569;">Vaše konverzace</h3>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                    {foreach $conversations as $contact}
+                        <li>
+                            <a n:href="Chat:detail $contact->id" style="display: flex; align-items: center; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; text-decoration: none; color: #1e293b; transition: all 0.2s; background: {if $contact->unreadCount > 0}#f0f9ff{else}#f8fafc{/if};" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='{if $contact->unreadCount > 0}#f0f9ff{else}#f8fafc{/if}'; this.style.borderColor='#e2e8f0';">
+
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
+                                    {$contact->username|first|upper}
+                                </div>
+
+                                <div style="flex: 1;">
+                                    <strong style="display: block; font-size: 1.1rem; {if $contact->unreadCount > 0}font-weight: 800; color: #0f172a;{/if}">{$contact->username}</strong>
+                                    <span style="color: #64748b; font-size: 0.85rem;">Otevřít konverzaci &rarr;</span>
+                                </div>
+
+                                {if $contact->unreadCount > 0}
+                                    <div style="background: #ef4444; color: white; border-radius: 50%; min-width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; padding: 0 6px; margin-left: 10px;">
+                                        {$contact->unreadCount}
+                                    </div>
+                                {/if}
+
+                            </a>
+                        </li>
+                    {/foreach}
+                </ul>
+            {/if}
+
+        </div>
+    </div>
+
+    <script n:syntax="off">
+        function searchUsers(query) {
+            const resultsContainer = document.getElementById('searchResults');
+            const config = document.getElementById('chat-config');
+
+            // Přečteme si URL adresy z neviditelného divu
+            const searchUrl = config.dataset.searchUrl;
+            const detailUrlTemplate = config.dataset.detailUrl;
+
+            if (query.length < 2) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            // Spustíme AJAX na správnou Nette adresu
+            fetch(searchUrl + '?q=' + encodeURIComponent(query))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.users.length === 0) {
+                        resultsContainer.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem; padding: 8px 0;">Žádní uživatelé nenalezeni.</p>';
+                        return;
+                    }
+
+                    resultsContainer.innerHTML = data.users.map(user => {
+                        // OPRAVA: Tady musíme hledat číslo 999999, abychom ho nahradili skutečným ID
+                        const userLink = detailUrlTemplate.replace('999999', user.id);
+
+                        return `
+                    <div onclick="window.location.href='${userLink}'"
+                       style="display: flex; align-items: center; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; text-decoration: none; color: #1e293b; margin-bottom: 8px; transition: all 0.2s; background: #f8fafc; cursor: pointer;"
+                       onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#cbd5e1';"
+                       onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0';">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; font-size: 0.9rem;">
+                            ${user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <strong style="display: block;">${user.username}</strong>
+                            <span style="color: #64748b; font-size: 0.8rem;">Zahájit konverzaci</span>
+                        </div>
+                    </div>
+                    `;
+                    }).join('');
+                })
+                .catch(error => {
+                    resultsContainer.innerHTML = '<p style="color: #ef4444; font-size: 0.9rem; padding: 8px 0;">Chyba při vyhledávání.</p>';
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+{/block}

@@ -1,0 +1,19 @@
+{block content}
+    <div class="container text-content">
+
+        <h1>Upravit komentář</h1>
+
+        <form n:name="editCommentAdminForm" class="form-registration" style="max-width: 100%; margin-top: 2rem;">
+            <div class="form-group">
+                <label n:name="content">Text komentáře:</label>
+                <textarea n:name="content" class="form-control" style="min-height: 150px; width: 100%;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" n:name="save" class="card-btn primary-btn">Uložit změny</button>
+                <a n:href="Post:show $postId" class="card-btn btn-delete" style="text-decoration: none; line-height: 2.2; padding: 0 15px;">Zrušit</a>
+            </div>
+        </form>
+
+    </div>
+{/block}

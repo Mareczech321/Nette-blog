@@ -1,0 +1,272 @@
+{block content}
+    <div class="profile-wrapper">
+
+        <div class="profile-card header-card">
+            <div class="profile-avatar">
+                <span>{$profileUser->username|first|upper}</span>
+            </div>
+            <div class="profile-info">
+                <h1 class="profile-name">{$profileUser->username}</h1>
+
+                <div class="profile-meta" style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+
+            <span class="profile-badge {if $profileUser->role === 'admin'}badge-admin{else}badge-user{/if}">
+                <i class="icon-role"></i> {$profileUser->role|upper}
+            </span>
+
+                    {if $profileUser->is_premium && $profileUser->premium_duration && $profileUser->premium_duration > new \DateTime()}
+                        <span class="badge-vip" title="Premium aktivní do: {$profileUser->premium_duration|date:'j. n. Y'}">
+                        <i class="fa-solid fa-crown"></i> VIP
+                    </span>
+                    {/if}
+
+                </div>
+            </div>
+            <div class="profile-contact-info">
+                <div class="contact-item">
+                    <span class="label">Email:</span>
+                    <span class="value">{$profileUser->email ?? 'Nezadáno'}</span>
+                </div>
+                <div class="contact-item">
+                    <span class="label">Poslední přihlášení:</span>
+                    <span class="value">{if $profileUser->last_login}{$profileUser->last_login|date:'j. n. Y H:i'}{else}Nikdy{/if}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section-title">
+            <h2>Statistiky uživatele</h2>
+            <hr class="section-divider">
+        </div>
+
+        <div class="profile-stats-grid">
+            <div class="stat-box">
+                <span class="stat-value">{$stats['posts']}</span>
+                <div class="stat-text">
+                    <span class="stat-desc">Napsaných příspěvků</span>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <span class="stat-value">{$stats['comments']}</span>
+                <div class="stat-text">
+                    <span class="stat-desc">Komentáře</span>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <span class="stat-value">{$stats['likesGiven']}</span>
+                <div class="stat-text">
+                    <span class="stat-desc">Rozdaných srdíček</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{$stats['postLikesReceived']}</div>
+                <div class="stat-text">
+                    <span class="stat-desc">Získané liky na příspěvkách</span>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-value">{$stats['commentLikesReceived']}</div>
+                <div class="stat-text">
+                    <span class="stat-desc">Získané liky na komentářích</span>
+                </div>
+            </div>
+        </div>
+
+        {if $isMe}
+            <hr class="section-divider">
+            <div class="profile-card dashboard-card">
+                <h2>Můj Dashboard</h2>
+                <p class="text-muted">Spravujte své osobní údaje a zabezpečení účtu.</p>
+
+                <div class="action-buttons">
+                    <a href="#" class="card-btn primary-btn" id="btn-toggle-password">Změnit heslo</a>
+                    <a href="#" class="card-btn" id="btn-toggle-edit">Upravit detaily</a>
+                    <a href="#" class="card-btn" id="btn-toggle-posts">Moje příspěvky</a>
+                    <a href="#" class="card-btn" id="btn-toggle-comments">Moje komentáře</a>
+                </div>
+
+        <div id="edit-form-container" class="dashboard-section" style="display: none; margin-top: 25px; padding-top: 25px; border-top: 1px solid #e2e8f0;">
+                        <h3 style="margin-top: 0; color: #1e293b;">✏️ Úprava osobních údajů</h3>
+                        {control profileEditForm}
+        </div>
+
+        <div id="password-form-container" class="dashboard-section" style="display: none; margin-top: 25px; padding-top: 25px; border-top: 1px solid #e2e8f0;">
+                        <h3 style="margin-top: 0; color: #1e293b;">🔒 Změna hesla</h3>
+                        {control changePasswordForm}
+        </div>
+
+            <div id="posts-container" class="dashboard-section" style="display: none; margin-top: 25px; padding-top: 25px; border-top: 1px solid #e2e8f0;">
+                    <h3 style="margin-top: 0; color: #1e293b;">📝 Moje příspěvky</h3>
+                    {if count($userPosts) > 0}
+                        <ul style="list-style: none; padding: 0;">
+                            {foreach $userPosts as $post}
+                                <li style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9;">
+                                    <a n:href="Post:show $post->id" style="text-decoration: none; font-weight: bold; color: #3b82f6;">{$post->title}</a>
+                                    <span style="font-size: 0.8rem; color: #94a3b8; margin-left: 10px;">{$post->created_at|date:'j. n. Y'}</span>
+                                </li>
+                            {/foreach}
+                        </ul>
+                    {else}
+                        <p style="color: #64748b;">Zatím jste nenapsal žádné příspěvky.</p>
+                    {/if}
+                </div>
+
+                <div id="comments-container" class="dashboard-section" style="display: none; margin-top: 25px; padding-top: 25px; border-top: 1px solid #e2e8f0;">
+                    <h3 style="margin-top: 0; color: #1e293b;">💬 Moje komentáře</h3>
+                    {if count($userComments) > 0}
+                        <ul style="list-style: none; padding: 0;">
+                            {foreach $userComments as $comment}
+                                <li style="margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                                    <a n:href="Post:show $comment->post_id" style="text-decoration: none; font-weight: bold; color: #3b82f6; display: block; margin-bottom: 5px;">Přejít na příspěvek</a>
+                                    <div style="color: #475569; font-style: italic;">{$comment->content|truncate:100}</div>
+                                    <span style="font-size: 0.8rem; color: #94a3b8;">{$comment->created_at|date:'j. n. Y'}</span>
+                                </li>
+                            {/foreach}
+                        </ul>
+                    {else}
+                        <p style="color: #64748b;">Zatím jste nenapsal žádné komentáře.</p>
+                    {/if}
+                </div>
+            </div>
+        {/if}
+
+    {if $isAdmin}
+            <hr class="section-divider">
+            <div class="profile-card admin-card">
+                <div class="admin-header-title">
+                    <h2>⚡ Administrace uživatele</h2>
+                    <span class="admin-status">Aktivní účet</span>
+                </div>
+
+                <div class="admin-grid">
+                    <div class="admin-actions">
+                        <div class="role-changer">
+                            <label style="margin-right: 10px;">Změnit roli:</label>
+
+                            {if ($profileUser->id == $user->getId())}
+                                <span class="admin-like-badge" style="background: #f1f5f9; color: #475569; border-color: #cbd5e1;">
+                                {$profileUser->role}
+                            </span>
+                                <span style="font-size: 0.85rem; font-style: italic; color: #0bbb0b; margin-left: 10px;">To jsi ty</span>
+                            {else}
+                                <select class="admin-role-select"
+                                        data-user-id="{$profileUser->id}"
+                                        data-link="{link changeRole! userId => $profileUser->id, role => 'placeholder'}">
+                                    <option value="admin" {if $profileUser->role === 'admin'}selected{/if}>Admin</option>
+                                    <option value="user" {if $profileUser->role === 'user'}selected{/if}>User</option>
+                                </select>
+                            {/if}
+                        </div>
+
+                        <div class="danger-actions" style="margin-top: 15px;">
+                            {if $profileUser->id !== $user->id}
+                                <a n:href="deleteUser! userId => $profileUser->id" class="card-btn btn-delete" onclick="return confirm('Opravdu chcete nenávratně smazat tento účet?');">Smazat účet</a>
+                            {/if}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {/if}
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- 1. Přepínání sekcí v Dashboardu (Aktualizováno pro všechny záložky) ---
+            const sections = document.querySelectorAll('.dashboard-section');
+            const toggleButtons = [
+                { btnId: 'btn-toggle-edit', sectionId: 'edit-form-container' },
+                { btnId: 'btn-toggle-password', sectionId: 'password-form-container' },
+                { btnId: 'btn-toggle-posts', sectionId: 'posts-container' },
+                { btnId: 'btn-toggle-comments', sectionId: 'comments-container' }
+            ];
+
+            toggleButtons.forEach(mapping => {
+                const btn = document.getElementById(mapping.btnId);
+                const section = document.getElementById(mapping.sectionId);
+
+                if (btn && section) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault(); // Zabrání odskočení nahoru kvůli href="#"
+
+                        const isCurrentlyVisible = (section.style.display === 'block');
+
+                        // 1. Skryje úplně všechny sekce
+                        sections.forEach(s => {
+                            if (s) s.style.display = 'none';
+                        });
+
+                        // 2. Pokud ta, na kterou jsme klikli, nebyla předtím vidět, zobrazíme ji
+                        if (!isCurrentlyVisible) {
+                            section.style.display = 'block';
+                            section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    });
+                }
+            });
+
+            // --- 2. AJAX pro změnu rolí (tvůj původní kód) ---
+            const roleSelect = document.querySelector('.admin-role-select');
+
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function() {
+                    const newRole = this.value;
+                    const rawLink = this.getAttribute('data-link');
+                    const url = rawLink.replace('placeholder', newRole);
+
+                    // Odeslání požadavku
+                    fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                alert('Chyba: ' + data.error);
+                                window.location.reload();
+                            } else {
+                                // 1. Oznámení vedle nadpisu
+                                const statusSpan = document.querySelector('.admin-status');
+                                if (statusSpan) {
+                                    const originalText = statusSpan.innerText;
+                                    statusSpan.innerText = 'Role uložena!';
+                                    statusSpan.style.color = '#10b981';
+                                    statusSpan.style.fontWeight = 'bold';
+
+                                    setTimeout(() => {
+                                        statusSpan.innerText = originalText;
+                                        statusSpan.style.color = '';
+                                        statusSpan.style.fontWeight = '';
+                                    }, 3000);
+                                }
+
+                                // 2. Překreslení štítku u avataru
+                                const topBadge = document.querySelector('.profile-badge');
+                                if (topBadge) {
+                                    topBadge.innerHTML = '<i class="icon-role"></i> ' + newRole.toUpperCase();
+
+                                    if (newRole === 'admin') {
+                                        topBadge.classList.remove('badge-user');
+                                        topBadge.classList.add('badge-admin');
+                                    } else {
+                                        topBadge.classList.remove('badge-admin');
+                                        topBadge.classList.add('badge-user');
+                                    }
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Chyba fetch:', err);
+                            alert('Nepodařilo se spojit se serverem.');
+                        });
+                });
+            }
+        });
+    </script>
+
+{/block}

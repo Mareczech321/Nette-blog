@@ -1,0 +1,39 @@
+services:
+	- App\Router\RouterFactory::createRouter
+	- App\Model\PostFacade
+	security.authenticator: App\Model\Auth\Authenticator
+	- App\Components\ICommentFormFactory
+	- App\Components\ILoginFormFactory
+	- App\Components\ISignUpFormFactory
+	- App\Components\ICreateFormFactory
+	- App\Components\IEditCommentFormFactory
+	- App\Model\CommentFacade
+	- App\Components\IEditPostFormFactory
+	- App\Model\PremiumService
+	- App\Model\FeedManager
+	- App\Model\ChartManager
+	- App\Model\Mapper\PostMapper
+	- App\Model\Mapper\CommentMapper
+	- App\Model\Mapper\PostFormMapper
+	- App\Model\Mapper\CommentFormMapper
+	- App\Model\ImageManager(%wwwDir%/assets/img)
+	- App\Model\Mapper\PostUrlMapper
+	- App\Model\Repository\PremiumPlanRepository
+	- App\Model\PremiumFacade
+	- App\Model\OrderFacade
+	- App\Model\Session\CartSession
+	- App\Model\Mapper\OrderMapper
+	- App\Components\IProfileEditFormFactory
+	- App\Components\IChangePasswordFormFactory
+	- App\Model\Facade\PdfFacade
+	- App\Model\Session\MultiAccountSession
+	- App\Model\Repository\PostReactionRepository(@database.default.explorer, 'post_reactions', App\Model\Mapper\ReactionMapper)
+	- App\Model\Repository\CommentReactionRepository(@database.default.explorer, 'comment_reactions', App\Model\Mapper\ReactionMapper)
+	- App\Model\ReactionFasade
+	- App\Model\Mapper\ReactionMapper
+	- App\Model\Mapper\MessageMapper
+	- App\Components\ISearchFormFactory
+	- App\Model\Service\EncryptionService
+	messageRepository: App\Model\Repository\MessageRepository(@database.default.explorer, @App\Model\Service\EncryptionService, 'c2VjcmV0QXBwRW5jb2RlS2V5')
+	messageFacade: App\Model\MessageFacade(@messageRepository, @App\Model\Service\EncryptionService, 'c2VjcmV0QXBwRW5jb2RlS2V5')
+	- App\Components\IChatMessageFormFactory

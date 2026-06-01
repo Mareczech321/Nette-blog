@@ -1,0 +1,367 @@
+{block content}
+
+    <div class="container admin-page">
+
+        <div class="admin-header">
+            <div>
+                <h1>Administrace webu</h1>
+                <p class="admin-meta">Přihlášen jako: <strong>{$user->getIdentity()->getData()['name']}</strong> (role: admin)</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a n:href="stealArticle!" class="card-btn" style="background-color: #f59e0b; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: background-color 0.2s;">
+                    <i class="fa-solid fa-rss"></i> Stáhnout RSS článek
+                </a>
+
+                <a n:href="Edit:create" class="card-btn primary-btn">+ Nový článek</a>
+            </div>
+        </div>
+
+        <div class="admin-stats" style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+
+            <div class="stat-box" style="flex: 1; min-width: 150px; position: relative;">
+                <span class="stat-number">{count($users)}</span>
+                <span class="stat-label">Celkem uživatelů</span>
+                <i class="fa-solid fa-users" style="position: absolute; bottom: 10px; right: 10px; color: #6366f1; font-size: 1.8rem; opacity: 0.6;"></i>
+            </div>
+
+            <div class="stat-box" style="flex: 1; min-width: 150px; position: relative;">
+                <span class="stat-number">{count($posts)}</span>
+                <span class="stat-label">Celkem článků</span>
+                <i class="fa-solid fa-file-lines" style="position: absolute; bottom: 10px; right: 10px; color: #3b82f6; font-size: 1.8rem; opacity: 0.6;"></i>
+            </div>
+
+            <div class="stat-box" style="flex: 1; min-width: 150px; position: relative;">
+                <span class="stat-number">{count($comments)}</span>
+                <span class="stat-label">Celkem komentářů</span>
+                <i class="fa-solid fa-comments" style="position: absolute; bottom: 10px; right: 10px; color: #10b981; font-size: 1.8rem; opacity: 0.6;"></i>
+            </div>
+
+            <div class="stat-box" style="flex: 1; min-width: 150px; position: relative;">
+                <span class="stat-number">{$likesTotal}</span>
+                <span class="stat-label">Celkem liků</span>
+                <i class="fa-solid fa-heart" style="position: absolute; bottom: 10px; right: 10px; color: #f43f5e; font-size: 1.8rem; opacity: 0.6;"></i>
+            </div>
+
+            <div class="stat-box" style="flex: 1; min-width: 150px; position: relative;">
+                <span class="stat-number">{$totalLikesOnPosts}</span>
+                <span class="stat-label">Lajky u článků</span>
+                <i class="fa-solid fa-heart" style="position: absolute; bottom: 10px; right: 10px; color: #8b5cf6; font-size: 1.8rem; opacity: 0.6;"></i>
+            </div>
+
+            <div class="stat-box" style="flex: 1; min-width: 150px; position: relative;">
+                <span class="stat-number">{$totalLikesOnComments}</span>
+                <span class="stat-label">Lajky u komentářů</span>
+                <i class="fa-solid fa-heart" style="position: absolute; bottom: 10px; right: 10px; color: #f59e0b; font-size: 1.8rem; opacity: 0.6;"></i>
+            </div>
+        </div>
+
+        <div class="admin-chart-wrapper" style="margin-bottom: 2rem; background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #334155; font-size: 1.1rem;">
+                <i class="fa-solid fa-chart-line" style="margin-right: 8px; color: #6366f1;"></i> Vývoj počtu příspěvků a komentářů v čase
+            </h3>
+            <div style="position: relative; height: 350px; width: 100%;">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+
+
+        <div class="table-toggle">
+            <button class="mngBtn active" id="postBtn">
+                <i class="fa-solid fa-file-lines"></i> Správa článků
+            </button>
+            <button class="mngBtn" id="commentBtn">
+                <i class="fa-solid fa-comments"></i> Správa komentářů
+            </button>
+            <button class="mngBtn" id="userBtn">
+                <i class="fa-solid fa-users"></i> Správa uživatelů
+            </button>
+        </div>
+
+        <div id="postSection">
+            <h2 style="margin-bottom: 1.5rem;">Správa článků</h2>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 100px;">Obrázek</th>
+                        <th>Název článku</th>
+                        <th style="width: 150px;">Datum vydání</th>
+                        <th style="width: 100px;">Lajky</th>
+                        <th style="width: 200px; text-align: center;">Akce</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {foreach $posts as $post}
+                        <tr>
+                            <td data-label="ID"><strong>#{$post->id}</strong></td>
+                            <td data-label="Obrázek">
+                                {if !empty($post->imageName)}
+                                    <img src="{$basePath}/assets/img/{$post->imageName}" alt="{$post->imageName}" class="admin-thumb">
+                                {else}
+                                    <span class="admin-no-thumb"><i class="fa-regular fa-image"></i></span>
+                                {/if}
+                            </td>
+                            <td data-label="Název článku">
+                                <a n:href="Post:show $post->id" target="_blank" class="admin-post-link">
+                                    {$post->title} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.8rem; margin-left: 5px;"></i>
+                                </a>
+                            </td>
+                            <td data-label="Datum vydání"><span class="admin-date">{$post->createdAt|date:'j. n. Y H:i'}</span></td>
+                            <td data-label="Lajky">
+                                <span class="admin-like-badge">
+                                    ❤️ {$post->getLikeCount()}
+                                </span>
+                            </td>
+                            <td data-label="Akce" class="admin-actions">
+                                <a n:href="Edit:edit $post->id" class="admin-btn-edit"><i class="fa-solid fa-pen"></i> Upravit</a>
+                                <a n:href="deletePost! $post->id" class="admin-btn-delete" onclick="return confirm('Opravdu chcete tento článek trvale smazat?');">
+                                    <i class="fa-solid fa-trash"></i> Smazat
+                                </a>
+                            </td>
+                        </tr>
+                    {/foreach}
+
+                        {if count($posts) === 0}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+                                Zatím nebyly vytvořeny žádné články.
+                            </td>
+                        </tr>
+                    {/if}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="commentSection" class="admin-hide">
+            <h2 style="margin-bottom: 1.5rem;">Správa komentářů</h2>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 150px;">Autor</th>
+                        <th style="width: 200px;">E-mail</th>
+                        <th>Text komentáře</th>
+                        <th style="width: 100px">ID článku</th>
+                        <th style="width: 100px;">Liky</th>
+                        <th style="width: 150px;">Datum</th>
+                        <th style="width: 120px; text-align: center;">Akce</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {foreach $comments as $comment}
+                        <tr>
+                            <td data-label="ID"><strong>#{$comment->id}</strong></td>
+                            <td data-label="Autor"><a n:href="User:profile $comment->name" style="color: black"><strong>{$comment->name}</strong></a></td>
+                            <td data-label="E-mail"><a href="mailto:{$comment->email}">{$comment->email}</a></td>
+                            <td data-label="Text komentáře">
+                                <div id="comment-text-{$comment->id}" style="max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{$comment->content}">
+                                    {$comment->content}
+                                </div>
+                            </td>
+                            <td data-label="ID článku">
+                                <strong>
+                                    <a n:href="Post:show $comment->postId" target="_blank" class="admin-post-link">
+                                        {$comment->postId} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.8rem; margin-left: 5px;"></i>
+                                    </a>
+                                </strong>
+                            </td>
+                            <td data-label="Liky">
+                                    <span class="admin-like-badge">
+                                        ❤️ {$comment->getLikeCount()}
+                                    </span>
+                            </td>
+                            <td data-label="Datum"><span class="admin-date">{$comment->createdAt|date:'j. n. Y H:i'}</span></td>
+                            <td data-label="Akce" class="admin-actions">
+                                <a n:href="Edit:comment commentId => $comment->id" class="admin-btn-edit">
+                                    <i class="fa-solid fa-pen"></i> Upravit
+                                </a>
+
+                                <a n:href="deleteComment! commentId => $comment->id" class="admin-btn-delete" onclick="return confirm('Opravdu chcete tento komentář trvale smazat?');">
+                                    <i class="fa-solid fa-trash"></i> Smazat
+                                </a>
+                            </td>
+                        </tr>
+                    {/foreach}
+
+                        {if count($comments) === 0}
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+                                Zatím nebyly napsány žádné komentáře.
+                            </td>
+                        </tr>
+                    {/if}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="userSection" class="admin-hide">
+            <h2 style="margin-bottom: 1.5rem;">Správa uživatelů</h2>
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Uživatelské jméno</th>
+                        <th>Role</th>
+                        <th style="width: 180px;">VIP Status</th>
+                        <th style="width: 180px; text-align: center;">Akce</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {foreach $users as $u}
+                        <tr>
+                            <td data-label="ID"><strong>#{$u->id}</strong></td>
+                            <td data-label="Uživatelské jméno"><a n:href="User:profile $u->username" style="color: black"><strong>{$u->username}</strong></a></td>
+
+                            <td data-label="Role">
+                                {if ($u->id == $user->getId())}
+                                    <span class="admin-like-badge" style="background: #f1f5f9; color: #475569; border-color: #cbd5e1;">
+                                        {$u->role}
+                                    </span>
+                                {else}
+                                    <select class="admin-role-select"
+                                            data-user-id="{$u->id}"
+                                            data-link="{link changeRole! userId => $u->id, role => 'placeholder'}">
+                                        <option value="admin" {if $u->role === 'admin'}selected{/if}>Admin</option>
+                                        <option value="user" {if $u->role === 'user'}selected{/if}>User</option>
+                                    </select>
+                                {/if}
+                            </td>
+
+                            <td data-label="VIP Status">
+                                <div id="vip-status-text-{$u->id}" style="margin-bottom: 6px;">
+                                    {if $u->is_premium && $u->premium_duration && $u->premium_duration > new \DateTime()}
+                                        <span style="color: #d97706; font-weight: bold; font-size: 0.85rem;">
+                                            <i class="fa-solid fa-crown"></i> do {$u->premium_duration|date:'j. n. Y'}
+                                        </span>
+                                    {else}
+                                        <span style="color: #94a3b8; font-size: 0.85rem;">Bez VIP</span>
+                                    {/if}
+                                </div>
+
+                                <select class="admin-vip-select"
+                                        data-user-id="{$u->id}"
+                                        data-link="{link updateVip! userId => $u->id, vipAction => 'placeholder'}">
+                                    <option value="" selected disabled>Upravit VIP...</option>
+                                    <option value="add_month">+ 1 Měsíc</option>
+                                    <option value="add_year">+ 1 Rok</option>
+                                    <option value="revoke">Zrušit VIP</option>
+                                </select>
+                            </td>
+
+                            <td data-label="Akce" class="admin-actions">
+                                {if $u->id !== $user->id}
+                                    <a n:href="deleteUser! userId => $u->id" class="admin-btn-delete" onclick="return confirm('Opravdu chcete tohoto uživatele trvale smazat?');">
+                                        <i class="fa-solid fa-trash"></i> Smazat
+                                    </a>
+                                {else}
+                                    <span class="admin-date" style="font-size: 0.85rem; font-style: italic; color: #0bbb0b;">To jsi ty</span>
+                                {/if}
+                            </td>
+                        </tr>
+                    {/foreach}
+                    {if count($users) === 0}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem 0;">
+                                Žádní uživatelé nenalezeni.
+                            </td>
+                        </tr>
+                    {/if}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="{$basePath}/assets/js/admin-tabs.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+
+            // Nette Latte automaticky převede PHP pole do platného JS pole/JSONu!
+            const labels = {$chart->labels};
+            const postsData = {$chart->postsData};
+            const commentsData = {$chart->commentsData};
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Vytvořené články',
+                            data: postsData,
+                            borderColor: '#3b82f6', // Modrá čára
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)', // Jemná výplň pod čarou
+                            borderWidth: 3,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            tension: 0.4, // Udělá křivku hezky plynulou (nehranatou)
+                            fill: true
+                        },
+                        {
+                            label: 'Napsané komentáře',
+                            data: commentsData,
+                            borderColor: '#10b981', // Zelená čára
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false, // Tooltip se ukáže i když nenajedeš přesně na bod
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true, // Kulaté ikonky v legendě
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1 // Na ose Y budou jen celá čísla
+                            },
+                            grid: {
+                                color: '#f1f5f9' // Jemná mřížka na pozadí
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false // Skrytí vertikální mřížky pro čistší vzhled
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+{/block}

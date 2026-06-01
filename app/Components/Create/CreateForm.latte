@@ -1,0 +1,17 @@
+{form postForm}
+    <div>
+        {label title /} {input title}
+    </div>
+    <div>
+        {label content /} {input content}
+    </div>
+    <div>
+        {label image /} {input image}
+    </div>
+    {if $user->isInRole('admin') || $isUserPremium}
+        <div>
+            {label is_premium /} {input is_premium}
+        </div>
+    {/if}
+    {input send}
+{/form}

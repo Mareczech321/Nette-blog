@@ -1,0 +1,6 @@
+{block content}
+<a n:href="Edit:create" n:if="$user->isLoggedIn()">Vytvořit příspěvek</a>
+
+{foreach $posts as $post}
+    <h2><a n:href="Post:show $post->id">{$post->title}</a></h2>
+{/foreach}

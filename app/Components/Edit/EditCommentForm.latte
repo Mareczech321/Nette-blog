@@ -1,0 +1,33 @@
+{foreach $comments as $comment}
+    <div class="comment">
+        <p id="comment-text-{$comment->id}">{$comment->content}</p>
+
+        {if $user->isLoggedIn() && ($user->getId() === $comment->user_id || $user->isInRole('admin'))}
+
+            <div class="post-actions" style="margin-top: 10px;">
+                <a href="#" class="btn-edit btn-trigger-edit" data-comment-id="{$comment->id}">Upravit</a>
+            </div>
+
+            <div id="comment-form-box-{$comment->id}" class="admin-hide" style="margin-top: 15px;">
+
+                {form editCommentForm-$comment->id}
+                    <ul class="form-errors" n:if="$form->hasErrors()">
+                        <li n:foreach="$form->errors as $error">{$error}</li>
+                    </ul>
+
+                    <div class="form-group">
+                        <textarea n:name="content" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button n:name="send">Uložit změny</button>
+
+                        <a href="{plink Post:show $presenter->getParameter('id')}" class="btn-secondary">Zrušit</a>
+                    </div>
+                {/form}
+
+            </div>
+
+        {/if}
+    </div>
+{/foreach}

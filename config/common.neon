@@ -1,0 +1,27 @@
+parameters:
+
+
+application:
+	errorPresenter: Auxiliary:Error
+	mapping:
+	    *: App\*Module\Presenters\*Presenter
+
+
+session:
+	expiration: 14 days
+
+
+di:
+	export:
+		parameters: no
+		tags: no
+
+search:
+    default:
+        in: %appDir%
+        classes:
+            - *Repository
+            - *Facade
+security:
+	users:
+		admin: secret

@@ -1,0 +1,39 @@
+{form signInForm}
+    <div style="margin-bottom: 15px;">
+        {label username /}
+        {input username style => 'width: 100%;'}
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        {label password /}
+        <div style="position: relative;">
+            {input password class => 'pwd-input', style => 'width: 100%; padding-right: 40px;'}
+            <i class="fa-regular fa-eye pwd-toggle" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; font-size: 1.1rem;"></i>
+        </div>
+    </div>
+
+    {input send}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.pwd-toggle').forEach(function(icon) {
+                icon.addEventListener('click', function() {
+                    // Najdeme input, který je před ikonkou
+                    const input = this.previousElementSibling;
+
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        this.classList.remove('fa-eye');
+                        this.classList.add('fa-eye-slash');
+                        this.style.color = '#3b82f6'; // Zvýraznění při zobrazení (např. modrá)
+                    } else {
+                        input.type = 'password';
+                        this.classList.remove('fa-eye-slash');
+                        this.classList.add('fa-eye');
+                        this.style.color = '#94a3b8'; // Původní šedá
+                    }
+                });
+            });
+        });
+    </script>
+{/form}

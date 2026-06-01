@@ -1,0 +1,18 @@
+{form form}
+    <ul n:if="$form->hasErrors()" class="errors">
+        <li n:foreach="$form->errors as $error">{$error}</li>
+    </ul>
+
+    <div>
+        {label name /} {input name}
+    </div>
+    <div>
+        {label email /} {input email}
+    </div>
+    <div>
+        {label content /} {input content}
+    </div>
+    <div>
+        {input send}
+    </div>
+{/form}

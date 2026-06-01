@@ -1,0 +1,88 @@
+<style>
+    /* Obalový kontejner */
+    .custom-search-container {
+        max-width: 600px;
+        margin: 0 auto 40px auto;
+    }
+
+    /* Reset případného globálního form stylu */
+    .custom-search-form {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Hlavní tvar pilulky */
+    .custom-search-wrapper {
+        display: flex;
+        align-items: center;
+        background: #f8fafc; /* Jemně šedé pozadí pilulky */
+        border: 1px solid #cbd5e1;
+        border-radius: 50px;
+        padding: 5px 5px 5px 20px;
+        transition: all 0.2s ease;
+    }
+
+    /* Efekt při prokliku (psaní) */
+    .custom-search-wrapper:focus-within {
+        background: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Ikonka lupy */
+    .custom-search-icon {
+        color: #64748b;
+        margin-right: 12px;
+        font-size: 1.1rem;
+    }
+
+    /* Samotné textové políčko - ZDE JE HLAVNÍ OPRAVA */
+    .custom-search-input {
+        flex: 1;
+        border: none !important; /* Vymaže globální rámeček */
+        background: transparent !important; /* Vymaže globální bílé pozadí */
+        outline: none !important;
+        box-shadow: none !important; /* Vymaže globální stíny/focus ringy */
+        font-size: 1.05rem;
+        color: #1e293b;
+        padding: 8px 0 !important;
+        margin: 0 !important;
+        height: auto !important;
+    }
+
+    .custom-search-input::placeholder {
+        color: #94a3b8;
+    }
+
+    /* Tlačítko Hledat */
+    .custom-search-btn {
+        background: #3b82f6 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 50px !important;
+        padding: 10px 24px !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .custom-search-btn:hover {
+        background: #2563eb !important;
+    }
+</style>
+
+<div class="custom-search-container">
+    <form n:name="form" class="custom-search-form">
+        <div class="custom-search-wrapper">
+            <i class="fa-solid fa-magnifying-glass custom-search-icon"></i>
+            <input n:name="q" class="custom-search-input">
+            <button n:name="search" class="custom-search-btn">Hledat</button>
+        </div>
+    </form>
+</div>

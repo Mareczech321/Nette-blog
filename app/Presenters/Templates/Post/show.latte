@@ -1,0 +1,668 @@
+{block content}
+    <a n:href="Home:" class="back-link">← Zpět na výpis článků</a>
+
+    <div class="article-header">
+        {if ($user->id == $post->user_id || $user->isInRole('admin'))}
+            <a n:href="Edit:edit $post->id" style="display: inline-block; margin-top: 1rem;" class="nav-btn">Upravit článek</a>
+            <a n:href="deletePost! $post->id" style="display: inline-block; margin-top: 1rem;" class="nav-btn" id="deleteBtn">Smazat článek</a>
+        {/if}
+
+        <div class="date">Vydáno {$post->created_at|date:'j. n. Y'}</div>
+        <div class="date">
+            <p>Autor:
+            {if ($author !== "Neznámý")}
+                <strong><a n:href="User:profile $author->username" style="color: black;">{$author->username}</a></strong>
+                {if $user->isLoggedIn() && $user->getId() !== $author->id}
+                    <a n:href="Chat:detail $author->id" style="margin-left: 10px; background: #3b82f6; color: white; padding: 4px 10px; border-radius: 12px; text-decoration: none; font-size: 0.8rem;">
+                        <i class="fa-regular fa-comment-dots"></i> Napsat
+                    </a>
+                {/if}
+            {else}
+                {$author}
+            {/if}
+            </p>
+        </div>
+        <h1 n:block="title">{$post->title}</h1>
+    </div>
+
+    {if !empty($post->image)}
+        <div class="article-image" style="margin-bottom: 2rem; text-align: center;">
+            <img src="{$basePath}/assets/img/{$post->image}" alt="{$post->title}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        </div>
+    {/if}
+
+    <div class="post-content-wrapper" style="position: relative; margin-bottom: 3rem;">
+
+        {if !$post->is_premium || $isUserPremium}
+
+            {if $post->is_premium}
+                <div class="premium-badge-inline" style="margin-bottom: 1.5rem; display: inline-block; background: #fef3c7; color: #b45309; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">
+                    <i class="fa-solid fa-crown"></i> Odemykáte prémiový obsah
+                </div>
+            {/if}
+
+            <div class="post" style="white-space: pre-line; word-break: break-word; line-height: 1.6;">
+                <h4 style="position: relative; left: -15px; top: -20px">Obsah:</h4>
+                {$post->content}
+            </div>
+
+        {else}
+
+            <div class="premium-preview" style="position: relative; overflow: hidden; max-height: 250px;">
+                <div class="post" style="white-space: pre-line; word-break: break-word; line-height: 1.6; color: #475569;">
+                    <h4 style="position: relative; left: -15px; top: -20px">Obsah:</h4>
+                    {$post->content|striptags|truncate:300}
+                </div>
+
+                <div class="premium-fade" style="position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));"></div>
+            </div>
+
+            <div class="premium-cta-box" style="text-align: center; padding: 3rem 2rem; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-top: -20px; position: relative; z-index: 2; box-shadow: 0 -10px 20px rgba(255,255,255,0.9);">
+                <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 1rem; display: block;"></i>
+                <h2 style="margin-top: 0; color: #1e293b; font-size: 1.5rem;">Zbytek článku je uzamčen</h2>
+                <p style="color: #64748b; margin-bottom: 1.5rem;">
+                    Tento článek je dostupný pouze pro uživatele s aktivním Premium účtem. Podpořte naši tvorbu a získejte plný přístup ke všem materiálům.
+                </p>
+
+                {if $user->isLoggedIn()}
+                    <a n:href="Premium:cart" class="card-btn" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; color: #78350f; font-weight: bold; padding: 12px 24px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); display: inline-block; text-decoration: none; border-radius: 8px;">
+                        <i class="fa-solid fa-crown"></i> Koupit Premium
+                    </a>
+                {else}
+                    <a n:href="Sign:in" class="card-btn primary-btn" style="padding: 12px 24px; font-size: 1.1rem; display: inline-block; text-decoration: none; border-radius: 8px;">
+                        Přihlásit se pro nákup
+                    </a>
+                {/if}
+            </div>
+
+        {/if}
+    </div>
+
+    <div class="article-likes" style="margin-top: 2rem; margin-bottom: 2rem; padding: 0.5rem 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+        {snippet likeButton}
+            {* PŮVODNÍ VELKÉ SRDÍČKO *}
+            <div style="display: inline-flex; align-items: center; gap: 15px; font-family: sans-serif;">
+                {if $user->isLoggedIn()}
+                    <a n:href="like! postId => $post->id" class="ajax" style="text-decoration: none;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.2s ease; cursor: pointer; border: 2px solid #e05d5d; background-color: {$isLiked ? 'red' : 'transparent'};">
+                            <i class="fa-solid fa-heart" style="color: {$isLiked ? 'white' : 'red'};"></i>
+                        </div>
+                    </a>
+                    <span style="font-weight: bold; font-size: 1.4rem; color: #333; min-width: 30px;">
+                        {$likeCount}
+                    </span>
+                    <div class="emoji-picker-wrapper" style="position: relative;">
+                        <button type="button" class="btn-emoji-picker" data-target-id="post-{$post->id}" data-link="{link addPostEmoji! postId => $post->id, emoji => '__EMOJI__'}" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.2s ease; cursor: pointer; border: 2px dashed #94a3b8; background-color: #f8fafc; color: #64748b; padding: 0;" onmouseover="this.style.borderColor='#3b82f6'; this.style.color='#3b82f6';" onmouseout="this.style.borderColor='#94a3b8'; this.style.color='#64748b';" title="Přidat vlastní reakci">
+                            <i class="fa-regular fa-face-smile"></i>
+                            <i class="fa-solid fa-plus" style="font-size: 0.7rem; position: absolute; margin-left: 22px; margin-top: -12px;"></i>
+                        </button>
+
+                        <div class="picker-container" id="picker-container-post-{$post->id}" style="display: none; position: absolute; top: 110%; left: 0; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 8px;"></div>
+                    </div>
+                {else}
+                    <div style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid #ccc; background-color: transparent; color: #ccc;" title="Pro lajkování se přihlaste">
+                        <i class="fa-solid fa-heart"></i>
+                    </div>
+                    <span style="font-weight: bold; font-size: 1.4rem; color: #333; min-width: 30px;">
+                        {$likeCount}
+                    </span>
+                {/if}
+            </div>
+
+            {* NOVÉ TLAČÍTKO PRO PŘIDÁNÍ EMOJI K ČLÁNKU *}
+
+
+            <div class="reactions-list" style="display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 8px;">
+                {foreach $reactionFasade->getPostEmojiCounts($post->id) as $reaction}
+                    {var $userReacted = $user->isLoggedIn() && $reactionFasade->hasUserReactedToPost($post->id, $user->getId(), $reaction->emoji)}
+                    <button type="button" 
+                            class="reaction-pill {if $userReacted}reaction-pill--user{/if}"
+                            data-emoji="{$reaction->emoji}"
+                            data-post-id="{$post->id}"
+                            onclick="handleReactionClick(event, this.dataset.postId, this.dataset.emoji, 'post')"
+                            style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: {if $userReacted}#dbeafe{else}#f1f5f9{/if}; border: 1px solid {if $userReacted}#3b82f6{else}#cbd5e1{/if}; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.2s ease; font-family: inherit; font-weight: 500;">
+                        <span style="font-size: 16px;">{$reaction->emoji}</span>
+                        <span style="color: {if $userReacted}#1e40af{else}#475569{/if}; font-size: 13px;">{$reaction->count}</span>
+                    </button>
+                {/foreach}
+            </div>
+
+            {if (!$user->isLoggedIn())}
+                <p style="font-size: 1rem; margin: 0; color: #64748b;">Pro likování a reakce se přihlaste!</p>
+            {/if}
+        {/snippet}
+    </div>
+
+    {if ($user->isLoggedIn())}
+        <div class="comments-section">
+            <h2>Napsat komentář</h2>
+            {control commentForm}
+        </div>
+    {/if}
+{/block}
+
+{block comments}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3rem; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Komentáře ({$commentCount})</h2>
+
+        {if count($topLevelComments) > 0}
+            <button type="button" id="toggle-all-comments-btn" onclick="toggleAllComments()" style="background: #3b82f6; border: 1px solid #2563eb; color: white; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.9rem;">
+                <i class="fa-solid fa-eye" style="margin-right: 5px;"></i> Zobrazit komentáře
+            </button>
+        {/if}
+    </div>
+
+    <div id="all-comments-wrapper" style="display: none;">
+        {snippet commentsArea}
+            <div class="comments">
+
+                {define commentTree, $commentsList, $depth = 0}
+                    {foreach $commentsList as $comment}
+                        <div class="comment-thread-wrapper">
+
+                            {var $replies = $comment->related('comments', 'parent_id')->order('created_at', 'ASC')}
+                            {var $replyCount = $replies->count()}
+
+                            {snippet comment-{$comment->id}}
+                                <div class="comment {if $depth > 0}nested-comment{/if}" id="comment-{$comment->id}" style="margin-bottom: {if $depth === 0}20px{else}0{/if}; {if $depth > 0}padding-left: 0; padding-right: 0; padding-bottom: 10px; border: none;  border-top: solid 2px #94A3B8FF;; box-shadow: none; background: transparent;{/if}">
+
+                                    {* --- DOVOUDRUHÝ VNITŘNÍ BOXÍK PRO BLIKÁNÍ --- *}
+                                    <div id="comment-inner-{$comment->id}" style="transition: background-color 0.5s ease, box-shadow 0.5s ease; padding: 8px; margin: -8px; border-radius: 6px;">
+
+                                            <div class="comment-header">
+                                            <span class="comment-meta">
+                                                {var $author = $comment->ref('users', 'user_id')}
+                                                {var $authorName = $author ? $author->username : $comment->name}
+
+                                                {if $author && $author->is_premium}
+                                                    <span style="color: #f59e0b; margin-left: 5px;"><i class="fa-solid fa-crown"></i></span>
+                                                {/if}
+
+                                                <strong>
+                                                        {if $author}
+                                                            <a n:href="User:profile $author->username">{$authorName}</a>
+                                                        {else}
+                                                            {$authorName}
+                                                        {/if}
+                                                </strong>
+
+                                                {var $parentComment = $comment->ref('comments', 'parent_id')}
+                                                {if $parentComment}
+                                                    {var $pAuthor = $parentComment->ref('users', 'user_id')}
+                                                    {var $pName = $pAuthor ? $pAuthor->username : $parentComment->name}
+
+                                                    {if $depth < 4}
+                                                        <a href="#comment-{$parentComment->id}" style="color: #64748b; font-size: 0.9em; font-weight: normal; margin-left: 8px; text-decoration: none;" title="Přejít na původní komentář">
+                                                            <i class="fa-solid fa-share" style="color: #94a3b8; margin-right: 4px;"></i> odpovídá na <strong>{$pName}</strong>
+                                                        </a>
+                                                    {/if}
+                                                {/if}
+                                            </span>
+
+                                                <div class="comment-actions">
+                                                    {if $user->isLoggedIn() && ($user->getId() === $comment->user_id || $user->isInRole('admin'))}
+                                                        <a n:href="Edit:comment commentId => $comment->id" class="btn-edit-comment"><i class="fa-solid fa-pen"></i> Upravit</a>
+                                                    {/if}
+
+                                                {if ($user->isLoggedIn() && $user->isInRole('admin') || $user->getId() === $comment->user_id)}
+                                                        <a n:href="deleteComment! commentId => $comment->id" class="btn-delete" onclick="return confirm('Opravdu smazat?');"><i class="fa-solid fa-trash"></i> Smazat</a>
+                                                    {/if}
+                                                </div>
+                                            </div>
+
+                                            <div class="comment-content-text" id="comment-text-{$comment->id}">
+                                                {if $parentComment && $depth >= 4}
+                                                    <a href="#comment-{$parentComment->id}" style="display: block; background: #f8fafc; border-left: 3px solid #cbd5e1; padding: 8px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #475569; text-decoration: none; border-radius: 0 4px 4px 0; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'" title="Přejít na tento komentář">
+                                                        <div style="font-weight: 600; margin-bottom: 3px; color: #334155;">
+                                                            <i class="fa-solid fa-reply" style="margin-right: 4px;"></i> {$pName}
+                                                        </div>
+                                                        <div style="font-style: italic;">"{$parentComment->content|striptags|truncate:80}"</div>
+                                                    </a>
+                                                {/if}
+
+                                            {$comment->content}
+                                            </div>
+
+                                            <div class="comment-footer" style="margin-top: 10px; display: flex; align-items: center; gap: 15px;">
+                                                {if !$user->isLoggedIn()}
+                                                    <a class="ajax" style="text-decoration: none; cursor: default" title="Pro likování se přihlašte!">
+                                                        <i class="fa-solid fa-heart" style="color: {$commentFacade->isLikedBy(new \App\Model\DTO\CommentLikeDTO($comment->id, (int)$user->getId())) ? 'red' : 'gray'}"></i>
+                                                        {$commentFacade->getLikeCount($comment->id)}
+                                                    </a>
+                                                {else}
+                                                    <a n:href="likeComment! commentId => $comment->id" class="ajax" style="text-decoration: none;">
+                                                        <i class="fa-solid fa-heart" style="color: {$commentFacade->isLikedBy(new \App\Model\DTO\CommentLikeDTO($comment->id, (int)$user->getId())) ? 'red' : 'gray'}"></i>
+                                                        {$commentFacade->getLikeCount($comment->id)}
+                                                    </a>
+                                                {/if}
+                                                {if $user->isLoggedIn()}
+                                                    <div class="emoji-picker-wrapper" style="position: relative; display: inline-block;">
+                                                    <button type="button" class="btn-emoji-picker" data-comment-id="{$comment->id}" data-link="{link addEmoji! commentId => $comment->id, emoji => '__EMOJI__'}" style="background: none; border: none; cursor: pointer; color: #64748b; display: flex; align-items: center; gap: 2px; padding: 0; transition: color 0.2s;" onmouseover="this.style.color='#3b82f6'" onmouseout="this.style.color='#64748b'" title="Přidat reakci">
+                                                                <i class="fa-regular fa-face-smile" style="font-size: 1.1rem;"></i>
+                                                                <i class="fa-solid fa-plus" style="font-size: 0.6rem; margin-top: -8px;"></i>
+                                                    </button>
+
+                                                        <div class="picker-container" id="picker-container-{$comment->id}" style="display: none; position: absolute; bottom: 100%; left: 30px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 8px;"></div>
+                                                    </div>
+                                                {/if}
+                                                <div class="reactions-list" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 6px; margin-bottom: 6px;">
+                                                    {foreach $reactionFasade->getCommentEmojiCounts($comment->id) as $reaction}
+                                                        {var $userReacted = $user->isLoggedIn() && $reactionFasade->hasUserReactedToComment($comment->id, $user->getId(), $reaction->emoji)}
+                                                        <button type="button" 
+                                                                class="reaction-pill {if $userReacted}reaction-pill--user{/if}"
+                                                                data-emoji="{$reaction->emoji}"
+                                                                data-comment-id="{$comment->id}"
+                                                                onclick="handleReactionClick(event, this.dataset.commentId, this.dataset.emoji, 'comment')"
+                                                                style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background-color: {if $userReacted}#dbeafe{else}#f1f5f9{/if}; border: 1px solid {if $userReacted}#3b82f6{else}#cbd5e1{/if}; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.2s ease; font-family: inherit; font-weight: 500;">
+                                                            <span style="font-size: 14px;">{$reaction->emoji}</span>
+                                                            <span style="color: {if $userReacted}#1e40af{else}#475569{/if}; font-size: 12px;">{$reaction->count}</span>
+                                                        </button>
+                                                    {/foreach}
+                                                </div>
+
+
+                                            {if $user->isLoggedIn()}
+                                                    <a href="javascript:void(0);"
+                                                       onclick="moveReplyForm({$comment->id}, '{$authorName}')"
+                                                       style="color: #10b981; text-decoration: none; font-size: 0.9em; font-weight: bold;">
+                                                        <i class="fa-solid fa-reply"></i> Odpovědět
+                                                    </a>
+                                                {/if}
+                                            </div>
+
+                                    </div> {* --- KONEC VNITŘNÍHO BOXÍKU --- *}
+
+                                    {* --- TLAČÍTKA PRO ZOBRAZENÍ ODPOVĚDÍ --- *}
+                                    {if $replyCount > 0}
+                                        <div id="show-replies-btn-container-{$comment->id}" style="display: flex; gap: 15px; align-items: center; margin-top: 10px;">
+                                            <button type="button" id="replies-btn-{$comment->id}" onclick="showNextReplies({$comment->id})" style="background: none; border: none; color: #3b82f6; font-weight: 600; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 6px; font-size: 0.9rem;">
+                                                <i class="fa-solid fa-turn-down fa-rotate-270" style="color: #94a3b8;"></i>
+                                                <span id="replies-btn-text-{$comment->id}">Zobrazit odpovědi ({$replyCount})</span>
+                                            </button>
+
+                                            <button type="button" id="hide-replies-btn-{$comment->id}" onclick="hideAllReplies({$comment->id})" style="display: none; background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; padding: 0; align-items: center; gap: 6px; font-size: 0.9rem;">
+                                                <i class="fa-solid fa-angle-up"></i> Skrýt
+                                            </button>
+                                        </div>
+                                    {/if}
+
+                                    <div id="reply-form-container-{$comment->id}" style="margin-top: 15px;"></div>
+
+                                    {* --- REKURZIVNÍ VYKRESLENÍ PODŘÍZENÝCH ODPOVĚDÍ --- *}
+                                    {if $replyCount > 0}
+                                        {var $indent = $depth < 4 ? '2rem' : '0'}
+
+                                        <div class="replies" style="margin-left: {$indent}; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; position: relative;">
+                                            {if $depth < 4}
+                                                <div style="position: absolute; left: -1rem; top: 15px; bottom: 0; width: 2px; background-color: #cbd5e1; border-radius: 3px;"></div>
+                                            {/if}
+
+                                            {foreach $replies as $reply}
+                                                <div class="reply-node-for-{$comment->id}" data-hidden="true" style="display: none;">
+                                                    {include commentTree, commentsList => [$reply], depth => $depth + 1}
+                                                </div>
+                                            {/foreach}
+                                        </div>
+                                    {/if}
+
+                                </div> {* Konec .comment *}
+                            {/snippet}
+
+                        </div>
+                    {/foreach}
+                {/define}
+
+                {if count($topLevelComments) > 0}
+                    {foreach $topLevelComments as $topComment}
+                        {var $isHidden = $iterator->counter > 5}
+
+                        <div class="top-level-comment-node" data-hidden="{if $isHidden}true{else}false{/if}" style="{if $isHidden}display: none;{/if}">
+                            {include commentTree, commentsList => [$topComment], depth => 0}
+                        </div>
+                    {/foreach}
+
+                    {if count($topLevelComments) > 5}
+                        <div id="load-more-container" style="text-align: center; margin: 3rem 0;">
+                            <button type="button" onclick="showNextMainComments()" style="background: #f8fafc; color: #475569; border: 2px solid #e2e8f0; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s ease;">
+                                <span id="main-btn-text">Zobrazit další komentáře ({count($topLevelComments) - 5})</span> <i class="fa-solid fa-angle-down" style="margin-left: 8px;"></i>
+                            </button>
+                        </div>
+                    {/if}
+                {else}
+                    <p style="color: var(--text-muted); font-style: italic;">Zatím tu nejsou žádné komentáře. Buďte první!</p>
+                {/if}
+
+            </div>
+        {/snippet}
+    </div>
+    {if $user->isLoggedIn()}
+        <div id="original-form-container" style="margin-top: 40px;">
+            <div class="comments-section" id="commentFormArea" style="padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                <div id="reply-info-box" style="display: none; background: #f0fdf4; border: 1px solid #10b981; padding: 15px; border-radius: 8px; margin-bottom: 20px; justify-content: space-between; align-items: center;">
+                    <strong style="color: #064e3b;"><i class="fa-solid fa-reply"></i> Píšete odpověď pro <span id="replying-to-name"></span></strong>
+                    <a href="javascript:void(0);" onclick="cancelReply()" style="color: #ef4444; text-decoration: none; font-weight: bold;">Zrušit odpověď ✖</a>
+                </div>
+
+                <div style="display: none" id="replyTo">
+                    <h2 id="comment-form-title">Napsat komentář</h2>
+                    {control commentForm}
+                </div>
+            </div>
+        </div>
+    {/if}
+
+    <style>
+        .comment {
+            transition: background-color 0.5s ease, box-shadow 0.5s ease;
+        }
+
+        .flash-highlight {
+            background-color: #fef08a !important;
+            box-shadow: 0 0 0 4px #fef08a !important;
+            border-radius: 6px !important;
+        }
+
+        .reaction-pill {
+            border: none;
+            background-color: #f1f5f9;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .reaction-pill:hover {
+            background-color: #e2e8f0;
+            border-color: #94a3b8 !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .reaction-pill:active {
+            transform: scale(0.95);
+        }
+
+        .reaction-pill--user {
+            background-color: #dbeafe;
+            border-color: #3b82f6 !important;
+        }
+
+        .reaction-pill--user:hover {
+            background-color: #bfdbfe;
+            border-color: #1e40af !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+
+    <script>
+        // --- FUNKCE PRO SCHOVÁVÁNÍ CELÉ DISKUZE ---
+        function toggleAllComments() {
+            const wrapper = document.getElementById('all-comments-wrapper');
+            const btn = document.getElementById('toggle-all-comments-btn');
+
+            if (wrapper.style.display === 'none') {
+                wrapper.style.display = 'block';
+                btn.innerHTML = '<i class="fa-solid fa-eye-slash" style="margin-right: 5px;"></i> Skrýt komentáře';
+                btn.style.background = '#f1f5f9';
+                btn.style.color = '#475569';
+                btn.style.borderColor = '#cbd5e1';
+            } else {
+                wrapper.style.display = 'none';
+                btn.innerHTML = '<i class="fa-solid fa-eye" style="margin-right: 5px;"></i> Zobrazit komentáře';
+                btn.style.background = '#3b82f6';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#2563eb';
+            }
+        }
+
+        // --- FUNKCE PRO HLAVNÍ KOMENTÁŘE ---
+        function showNextMainComments() {
+            const hiddenNodes = document.querySelectorAll('.top-level-comment-node[data-hidden="true"]');
+            let count = 0;
+
+            hiddenNodes.forEach(function(node) {
+                if (count < 5) {
+                    node.style.display = 'block';
+                    node.setAttribute('data-hidden', 'false');
+                    count++;
+                }
+            });
+
+            const remaining = document.querySelectorAll('.top-level-comment-node[data-hidden="true"]').length;
+
+            if (remaining > 0) {
+                const btnText = document.getElementById('main-btn-text');
+                if (btnText) btnText.innerHTML = 'Zobrazit dalších 5 komentářů (' + remaining + ')';
+            } else {
+                const container = document.getElementById('load-more-container');
+                if (container) container.style.display = 'none';
+            }
+        }
+
+        // --- FUNKCE PRO ODPOVĚDI S MOŽNOSTÍ "SKRÝT" ---
+        function showNextReplies(parentId) {
+            const hiddenNodes = document.querySelectorAll('.reply-node-for-' + parentId + '[data-hidden="true"]');
+            let count = 0;
+
+            hiddenNodes.forEach(function(node) {
+                if (count < 5) {
+                    node.style.display = 'block';
+                    node.setAttribute('data-hidden', 'false');
+                    count++;
+                }
+            });
+
+            const hideBtn = document.getElementById('hide-replies-btn-' + parentId);
+            if (hideBtn) hideBtn.style.display = 'flex';
+
+            const remaining = document.querySelectorAll('.reply-node-for-' + parentId + '[data-hidden="true"]').length;
+            const showBtn = document.getElementById('replies-btn-' + parentId);
+
+            if (remaining > 0) {
+                showBtn.style.display = 'flex';
+                document.getElementById('replies-btn-text-' + parentId).innerHTML = 'Zobrazit další odpovědi (' + remaining + ')';
+            } else {
+                showBtn.style.display = 'none';
+            }
+        }
+
+        // --- FUNKCE PRO SKRYTÍ ODPOVĚDÍ ---
+        function hideAllReplies(parentId) {
+            const allNodes = document.querySelectorAll('.reply-node-for-' + parentId);
+
+            allNodes.forEach(function(node) {
+                node.style.display = 'none';
+                node.setAttribute('data-hidden', 'true');
+            });
+
+            const hideBtn = document.getElementById('hide-replies-btn-' + parentId);
+            if (hideBtn) hideBtn.style.display = 'none';
+
+            const showBtn = document.getElementById('replies-btn-' + parentId);
+            if (showBtn) {
+                showBtn.style.display = 'flex';
+                document.getElementById('replies-btn-text-' + parentId).innerHTML = 'Zobrazit odpovědi (' + allNodes.length + ')';
+            }
+        }
+
+        // --- FUNKCE PRO PŘESOUVÁNÍ FORMULÁŘE ---
+        function moveReplyForm(commentId, authorName) {
+            document.getElementById('replyTo').style.display = 'block';
+            const formArea = document.getElementById('commentFormArea');
+            const targetContainer = document.getElementById('reply-form-container-' + commentId);
+            targetContainer.appendChild(formArea);
+            const parentInput = formArea.querySelector('input[name="parent_id"]');
+            if (parentInput) parentInput.value = commentId;
+            document.getElementById('replying-to-name').textContent = authorName;
+            document.getElementById('reply-info-box').style.display = 'flex';
+            document.getElementById('comment-form-title').style.display = 'none';
+            const textarea = formArea.querySelector('textarea');
+            if (textarea) textarea.focus();
+        }
+
+        function cancelReply() {
+            document.getElementById('replyTo').style.display = 'none';
+            const formArea = document.getElementById('commentFormArea');
+            const originalContainer = document.getElementById('original-form-container');
+            originalContainer.appendChild(formArea);
+            const parentInput = formArea.querySelector('input[name="parent_id"]');
+            if (parentInput) parentInput.value = '';
+            document.getElementById('reply-info-box').style.display = 'none';
+            document.getElementById('comment-form-title').style.display = 'block';
+        }
+
+        // --- FUNKCE PRO BLIKÁNÍ ---
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+
+            if (link && link.getAttribute('href') && link.getAttribute('href').startsWith('#comment-')) {
+                e.preventDefault();
+
+                const targetId = link.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                const innerBoxId = targetId.replace('comment-', 'comment-inner-');
+                const innerElement = document.getElementById(innerBoxId);
+
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    if (innerElement) {
+                        innerElement.classList.remove('flash-highlight');
+                        setTimeout(() => {
+                            innerElement.classList.add('flash-highlight');
+                            setTimeout(() => {
+                                innerElement.classList.remove('flash-highlight');
+                            }, 2000);
+                        }, 300);
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.hash && window.location.hash.startsWith('#comment-')) {
+                const targetId = window.location.hash.substring(1);
+                const targetElement = document.getElementById(targetId);
+                const innerElement = document.getElementById(targetId.replace('comment-', 'comment-inner-'));
+
+                if (targetElement && innerElement) {
+                    setTimeout(() => {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        innerElement.classList.add('flash-highlight');
+
+                        setTimeout(() => {
+                            innerElement.classList.remove('flash-highlight');
+                        }, 2000);
+                    }, 500);
+                }
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.22.18/index.js" type="module"></script>
+    <script>
+        const applyEmojiReaction = (linkTemplate, container, selectedEmoji) => {
+            const finalLink = linkTemplate.replace('__EMOJI__', encodeURIComponent(selectedEmoji));
+
+            container.style.display = 'none';
+
+            // AJAX volání
+            const ajaxLink = document.createElement('a');
+            ajaxLink.href = finalLink;
+            ajaxLink.className = 'ajax';
+            document.body.appendChild(ajaxLink);
+            ajaxLink.click();
+            document.body.removeChild(ajaxLink);
+        };
+
+        const buildFallbackPicker = (linkTemplate, container) => {
+            const fallback = document.createElement('div');
+            fallback.className = 'emoji-fallback';
+            fallback.style.display = 'grid';
+            fallback.style.gridTemplateColumns = 'repeat(6, 1fr)';
+            fallback.style.gap = '6px';
+            fallback.style.padding = '8px';
+            fallback.style.background = '#ffffff';
+            fallback.style.border = '1px solid #e2e8f0';
+            fallback.style.borderRadius = '8px';
+            fallback.style.boxShadow = '0 10px 25px rgba(0,0,0,0.15)';
+
+            const emojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '🔥', '🎉', '👏', '🙏', '😍', '🤔'];
+            emojis.forEach(emoji => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = emoji;
+                button.style.border = 'none';
+                button.style.background = 'transparent';
+                button.style.cursor = 'pointer';
+                button.style.fontSize = '20px';
+                button.style.lineHeight = '1';
+                button.addEventListener('click', event => {
+                    event.preventDefault();
+                    applyEmojiReaction(linkTemplate, container, emoji);
+                });
+                fallback.appendChild(button);
+            });
+
+            return fallback;
+        };
+
+        document.addEventListener('click', function(e) {
+            const target = e.target instanceof Element ? e.target : null;
+            const btn = target ? target.closest('.btn-emoji-picker') : null;
+
+            // Pokud klikneme mimo, zavřeme vše
+            if (!btn && !(target && target.closest('.picker-container'))) {
+                document.querySelectorAll('.picker-container').forEach(c => c.style.display = 'none');
+            }
+
+            if (btn) {
+                // Determine the container ID from either data-target-id (posts) or data-comment-id (comments)
+                let containerId = btn.getAttribute('data-target-id') || btn.getAttribute('data-comment-id');
+                const linkTemplate = btn.getAttribute('data-link');
+                const wrapper = btn.closest('.emoji-picker-wrapper');
+                const container = document.getElementById('picker-container-' + containerId)
+                    || (wrapper ? wrapper.querySelector('.picker-container') : null);
+
+                if (!container) {
+                    console.error('Container nenalezen pro ID: ' + containerId);
+                    return;
+                }
+
+                if (container.style.display === 'block') {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                document.querySelectorAll('.picker-container').forEach(c => c.style.display = 'none');
+
+                // Kontrola, zda už picker existuje
+                if (!container.querySelector('emoji-picker') && !container.querySelector('.emoji-fallback')) {
+                    if (window.customElements && customElements.get('emoji-picker')) {
+                        const picker = document.createElement('emoji-picker');
+                        container.appendChild(picker);
+                        picker.addEventListener('emoji-click', event => {
+                            applyEmojiReaction(linkTemplate, container, event.detail.unicode);
+                        });
+                    } else {
+                        container.appendChild(buildFallbackPicker(linkTemplate, container));
+                    }
+                }
+                container.style.display = 'block';
+            }
+        });
+
+        function handleReactionClick(event, id, emoji, type) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Use the existing add handlers which toggle reactions
+            const url = window.location.href.split("?")[0];
+            let newUrl;
+            
+            if (type === "post") {
+                newUrl = url + "?do=addPostEmoji" + "&postId=" + id + "&emoji=" + encodeURIComponent(emoji);
+            } else if (type === "comment") {
+                newUrl = url + "?do=addEmoji" + "&commentId=" + id + "&emoji=" + encodeURIComponent(emoji);
+            }
+            
+            window.location.href = newUrl;
+        }
+    </script>
+{/block}
