@@ -4,6 +4,8 @@
 
 ## Přehled projektu
 
+[English](./README.md)
+
 Tento projekt představuje moderní webovou aplikaci vyvinutou v PHP 8.3 s využitím frameworku Nette. Aplikace funguje jako sociální platforma umožňující publikování příspěvků, správu uživatelských účtů, komentáře, reakce, interní komunikaci a správu prémiových členství.
 
 Součástí řešení je integrace relační databáze MariaDB/MySQL a fulltextového vyhledávání pomocí Elasticsearch.
